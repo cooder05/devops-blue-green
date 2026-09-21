@@ -1,0 +1,28 @@
+services:
+
+  blue:
+    image: your-dockerhub-username/node-blue-green:latest
+    container_name: node-blue
+    environment:
+      - VERSION=blue
+    ports:
+      - "3001:3000"
+
+  green:
+    image: your-dockerhub-username/node-blue-green:latest
+    container_name: node-green
+    environment:
+      - VERSION=green
+    ports:
+      - "3002:3000"
+
+  nginx:
+    image: nginx:alpine
+    container_name: node-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - blue
+      - green
