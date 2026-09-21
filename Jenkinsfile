@@ -8,64 +8,50 @@ pipeline {
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                checkout scm
-            }
-        }
-
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    docker build \
-                        -t ${IMAGE}:${TAG} \
-                        -t ${IMAGE}:latest .
-                '''
+                bat 'docker build -t %IMAGE%:%TAG% .'
             }
         }
 
         stage('Deploy Green') {
             steps {
-                sh '''
-                    docker stop node-green || true
-                    docker rm node-green || true
+                bat '''
+                    docker stop node-green 2>NUL
+                    docker rm node-green 2>NUL
 
-                    docker run -d \
-                        --name node-green \
-                        -p 3002:3000 \
-                        -e VERSION=${TAG} \
-                        ${IMAGE}:${TAG}
+                    docker run -d ^
+                        --name node-green ^
+                        -p 3002:3000 ^
+                        -e VERSION=%TAG% ^
+                        %IMAGE%:%TAG%
                 '''
             }
         }
 
         stage('Test Green') {
             steps {
-                sh '''
-                    sleep 5
-
-                    curl --fail http://localhost:3002/ || exit 1
+                bat '''
+                    timeout /t 5 /nobreak
+                    curl --fail http://localhost:3002/
                 '''
             }
         }
 
-        stage('Switch to Green') {
+        stage('Deployment Complete') {
             steps {
-                sh '''
-                    echo "Green deployment successful"
-                    echo "New version: ${TAG}"
-                '''
+                echo 'Green deployment completed successfully.'
             }
         }
     }
 
     post {
         success {
-            echo 'Blue-Green deployment completed successfully.'
+            echo 'Blue-Green deployment successful.'
         }
 
         failure {
-            echo 'Green deployment failed. Blue remains active.'
+            echo 'Deployment failed. Blue remains available.'
         }
     }
 }
