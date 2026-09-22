@@ -1,7 +1,7 @@
 services:
 
   blue:
-    image: your-dockerhub-username/node-blue-green:latest
+    image: node-blue-green:latest
     container_name: node-blue
     environment:
       - VERSION=blue
@@ -9,7 +9,7 @@ services:
       - "3001:3000"
 
   green:
-    image: your-dockerhub-username/node-blue-green:latest
+    image: node-blue-green:latest
     container_name: node-green
     environment:
       - VERSION=green

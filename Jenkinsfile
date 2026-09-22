@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    options {
+        disableConcurrentBuilds()
+    }
+
     environment {
         IMAGE = "node-blue-green"
         TAG = "${BUILD_NUMBER}"
@@ -10,17 +14,17 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                bat 'docker build -t %IMAGE%:%TAG% .'
+                bat '"%DOCKER%" build -t %IMAGE%:%TAG% .'
             }
         }
 
         stage('Deploy Green') {
             steps {
                 bat '''
-                    docker stop node-green 2>NUL
-                    docker rm node-green 2>NUL
+                    "%DOCKER%" stop node-green 2>NUL
+                    "%DOCKER%" rm node-green 2>NUL
 
-                    docker run -d ^
+                    "%DOCKER%" run -d ^
                         --name node-green ^
                         -p 3002:3000 ^
                         -e VERSION=%TAG% ^
@@ -47,11 +51,11 @@ pipeline {
 
     post {
         success {
-            echo 'Blue-Green deployment successful.'
+            echo 'Green deployment successful.'
         }
 
         failure {
-            echo 'Deployment failed. Blue remains available.'
+            echo 'Green deployment failed. The existing deployment was not changed.'
         }
     }
 }
